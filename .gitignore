@@ -1,0 +1,17 @@
+# Made on each laptop by setup.bat and the job search
+.venv/
+__pycache__/
+.pytest_cache/
+data/
+output/
+
+# Private to the person using it. Never commit these.
+config/telegram.yaml
+Career_Facts.txt
+PLAYBOOK.md
+HANDOFF.md
+*.pdf
+*.doc
+*.docx
+*.html
+!CV_Template_Example.html

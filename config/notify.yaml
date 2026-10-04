@@ -1,0 +1,33 @@
+# ============================================================================
+#  ALERTS FOR NEW JOBS  (read by jobhunter/notify.py, added 2026-09-25)
+#
+#  The 24x7 watcher checks the job sites all day. When it finds a new job worth applying to, it
+#  alerts you straight away, with the apply link and the CV to use.
+# ============================================================================
+
+min_score: 60                # jobs at or above this ping you (band 1 is 70+, band 2 is 55 to 69)
+freelance_min_score: 65      # bounties and gigs
+remote_bonus: 5              # remote jobs open to India ping from min_score minus this
+only_applicable: true        # never ping for region-locked, language-locked or closed jobs
+max_popups_per_check: 4      # more new jobs than this in one check = one summary pop-up
+
+# 1. Windows pop-up (works now, nothing to set up). Buttons open the job and its CV.
+windows_popup: true
+
+# 2. Telegram, so alerts reach your phone (optional, about 3 minutes to set up)
+#    a) In Telegram, open @BotFather, send /newbot, pick any name. It replies with a token.
+#    b) Paste the token below (or set the TELEGRAM_BOT_TOKEN environment variable instead).
+#    c) Send any message to your new bot, then run   check_system.bat   (it finds your chat id
+#       and prints it; paste it below or set TELEGRAM_CHAT_ID).
+#    The token is like a password for the bot. Keep this file private.
+telegram:
+  bot_token: ""
+  chat_id: ""
+  send_cv_pdf: true          # attach the CV to use, so you can apply from your phone
+
+# 3. ntfy.sh push (optional, free app). Pick a long random topic name, subscribe to it in the app.
+#    Anyone who knows the topic name can read the alerts, so make it hard to guess.
+ntfy_topic: ""
+
+# A source that fails this many checks in a row (blocked, site changed) sends one alert a day.
+source_failure_alert_after: 3

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Your Name CV</title>
+<!--
+  EXAMPLE CV TEMPLATE. Build the candidate's real CV in this structure.
+  jobhunter/cv.py builds a copy per job and changes only two things
+    1. the text inside <div class="role"> (the headline)
+    2. the first <span> inside <div class="contact"> (the location line)
+  Keep those two elements. Everything else is free. Visible text must not contain
+  semicolons, colons, em or en dashes, arrows or middots (links and e-mails are fine).
+  Render with Playwright, channel="chrome", prefer_css_page_size=True.
+-->
+<style>
+  @page { size: A4; margin: 10mm 13mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", -apple-system, Arial, sans-serif;
+    font-size: 9.4pt; line-height: 1.32; color: #1a1f2b;
+  }
+  .head { border-bottom: 2.5px solid #1f4e79; padding-bottom: 6pt; margin-bottom: 8pt; }
+  .head h1 { font-size: 21pt; font-weight: 800; letter-spacing: 0.5px; }
+  .head .role { font-size: 10.5pt; color: #1f4e79; font-weight: 600; margin: 2pt 0 5pt; }
+  .head .contact { font-size: 8.6pt; color: #444c5c; }
+  .sep { color: #1f4e79; padding: 0 3pt; }
+
+  h2 {
+    font-size: 10.5pt; text-transform: uppercase; letter-spacing: 1.2px;
+    color: #1f4e79; margin: 7pt 0 3pt; padding-bottom: 1.5pt;
+    border-bottom: 1px solid #d5dde8;
+  }
+  .summary { font-size: 9.2pt; color: #2a3140; }
+
+  .entry { margin-bottom: 5pt; page-break-inside: avoid; }
+  .entry-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .entry-head h3 { font-size: 10.3pt; font-weight: 700; }
+  .entry-head .when { font-size: 8.6pt; color: #666f80; font-weight: 600; white-space: nowrap; padding-left: 8pt; }
+  .entry .sub { font-size: 9pt; color: #555e70; font-style: italic; margin-bottom: 2pt; }
+  ul { margin: 2pt 0 0 12pt; }
+  li { margin-bottom: 1.2pt; font-size: 9.1pt; color: #2a3140; }
+  li::marker { color: #1f4e79; }
+  .skill-line { font-size: 9pt; margin-bottom: 2.5pt; color: #2a3140; }
+  .skill-line b { color: #1f4e79; padding-right: 3pt; }
+  a.cvlink { color: inherit; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>YOUR NAME</h1>
+  <div class="role">Your Target Role | Strength One | Strength Two</div>
+  <div class="contact">
+    <span>Your City, Your State, India</span><span class="sep">|</span>
+    <span><a class="cvlink" href="mailto:you@example.com">you@example.com</a></span><span class="sep">|</span>
+    <span>+91 00000 00000</span><span class="sep">|</span>
+    <span><a class="cvlink" href="https://linkedin.com/in/your-name">linkedin.com/in/your-name</a></span>
+  </div>
+</div>
+
+<h2>Professional Summary</h2>
+<p class="summary">
+Three or four sentences built only from true facts. Years of experience, the processes you own, the tools you use
+and one or two results with real numbers.
+</p>
+
+<h2>Professional Experience</h2>
+
+<div class="entry">
+  <div class="entry-head">
+    <h3>Current Company Name</h3>
+    <span class="when">Month Year - Present</span>
+  </div>
+  <div class="sub">Your Title, City</div>
+  <ul>
+    <li>What you own, with the process name and the volume (for example the number of entries, vendors or accounts).</li>
+    <li>A result with a real number and how you got it.</li>
+    <li>Tools used every day, and who you work with.</li>
+  </ul>
+</div>
+
+<div class="entry">
+  <div class="entry-head">
+    <h3>Previous Company Name</h3>
+    <span class="when">Month Year - Month Year</span>
+  </div>
+  <div class="sub">Your Title, City</div>
+  <ul>
+    <li>What you owned and a result with a real number.</li>
+  </ul>
+</div>
+
+<h2>Skills</h2>
+<p class="skill-line"><b>Processes</b> Example process one, example process two</p>
+<p class="skill-line"><b>Tools</b> Example tool one, example tool two</p>
+
+<h2>Education and Certifications</h2>
+<p class="skill-line"><b>Degree</b> Institute, Year</p>
+
+</body>
+</html>

@@ -1,0 +1,426 @@
+# ============================================================================
+#  JOB WEBSITES  —  add, remove or disable sources here.
+#  Set "enabled: false" to skip one. See docs/ADDING_A_SOURCE.md for details.
+#
+#  Types:
+#    rss      → any RSS/Atom job feed                          (no code needed)
+#    html     → any simple job-list page, via CSS selectors    (no code needed)
+#    ats      → company career pages on Greenhouse/Lever/Ashby (no code needed)
+#    linkedin → LinkedIn public (logged-out) job search
+#    naukri   → Naukri.com via headless Chrome
+#    naukrigulf → NaukriGulf.com (UAE, Saudi, Qatar, Bahrain, Oman, Kuwait) via headless Chrome
+#    telegram → public Telegram channels via t.me web preview (no account needed)
+#    superteam→ Superteam Earn bounties/projects (freelance)
+#    remote_boards → general remote job boards, filtered to crypto
+#    custom   → your own Python file in jobhunter/sources/<module>.py
+#
+#  web3_native: true  → every job there is crypto, so it gets the +5 source bonus
+#                       and never gets the "not a web3 job" penalty.
+#
+#  24x7 watcher (added 2026-09-25, jobhunter/watch.py):
+#    every_minutes: N   → the watcher checks this source every N minutes (cheap public APIs often,
+#                         sites that block scrapers rarely). Failures retry sooner, then back off.
+#    watch: {...}       → settings used only by the quick watcher checks (e.g. fewer LinkedIn pages).
+#                         run_jobs.bat (the full run) ignores them.
+# ============================================================================
+
+sources:
+
+  # ---------------- The four requested sites ----------------
+
+  - name: LinkedIn
+    type: linkedin
+    enabled: true
+    every_minutes: 60        # watcher: fresh 24 h pass only, first 20 per search (see watch)
+    watch: { fresh_results_per_search: 20, max_descriptions: 40 }
+    mode: guest              # guest | google_index | session  (only guest is built — see handoff.md)
+    fresh_window_hours: 24         # pass 1: last 24 h, newest first — catches today's posts
+    fresh_results_per_search: 60
+    results_per_search: 30         # pass 2: whole max_age_days window by relevance (earlier runs hold the rest)
+    delay_seconds: 2
+    max_descriptions: 120    # descriptions fetched only for titles that don't mention crypto/web3
+    backoff_seconds: [60, 180]  # on HTTP 429 (rate limit): wait, retry; give up after these
+    backfill_every_hours: 20   # pass 2 once a day (the 10:00 run). The 18:30 run does pass 1 only, which
+                               # already covers everything posted since the morning. Descriptions are cached.
+
+  - name: Naukri
+    type: naukri
+    enabled: true
+    every_minutes: 240       # Akamai-protected, so a few visits a day, like a person
+    pages_per_search: 1      # default; per-search pages are set in profile.yaml → naukri_searches
+    delay_seconds: 4         # human-like pause between pages (randomised 3–6 s). Lower = faster but more blocks
+    headless: true           # set false to watch the browser (or if Naukri starts blocking)
+
+  - name: Apna
+    type: apna
+    enabled: true
+    every_minutes: 360       # Link11 blocks fast scrapers
+    # apna.co search matches loosely, so scoring filters. Added 2026-09-24. "bitcoin" and
+    # "crypto exchange" were tried and return almost only non-crypto jobs.
+    searches:
+      - { q: blockchain, pages: 2 }
+      - { q: crypto, pages: 2 }
+      - cryptocurrency
+      - web3
+      - crypto aml
+      - crypto kyc
+    # Job pages (description + post date) only for cards that look relevant. Titles without these
+    # words are scored on the card alone. Keep it small: apna.co blocks fast scrapers (see apna.py).
+    detail_words: [blockchain, crypto, web3, bitcoin, coin, token, defi, kyc, aml, fraud, compliance,
+                   transaction monitoring, investigat, support, trainer, analyst]
+    max_details: 30
+    delay_seconds: 3
+
+  - name: Naukri Gulf
+    type: naukrigulf
+    enabled: true
+    every_minutes: 480
+    max_age_days: 30         # Gulf hiring moves slower; overrides profile.yaml's 14 days for this site
+    pages_per_search: 2      # 30 jobs per page
+    delay_seconds: 4
+    headless: true
+
+  - name: CryptoJobsList
+    type: rss
+    enabled: true
+    every_minutes: 20
+    web3_native: true
+    url: https://cryptojobslist.com/rss   # newest ~100 jobs, full descriptions (site search is Cloudflare-blocked)
+    company_from: author
+    location_from: media_location
+
+  # jobleads.com → Phase 2 (needs your one-time manual login)
+
+  # ---------------- Web3 job boards ----------------
+
+  - name: web3.career
+    type: html
+    enabled: true
+    every_minutes: 60
+    browser_fallback: true   # if Cloudflare ever refuses plain HTTP, read the page in headless Chrome
+    web3_native: true
+    base_url: https://web3.career
+    urls:
+      - https://web3.career/analyst-jobs
+      - https://web3.career/support-jobs
+      - https://web3.career/customer-support-jobs
+      - https://web3.career/community-manager-jobs
+      - https://web3.career/quality-assurance-jobs   # /qa-jobs is a 404 page (found 2026-09-25)
+      - https://web3.career/devops-jobs
+      - https://web3.career/research-jobs
+      - https://web3.career/compliance-jobs
+      - https://web3.career/operations-jobs
+      - https://web3.career/non-tech-jobs
+      - https://web3.career/entry-level-jobs
+      - https://web3.career/junior-jobs
+      - https://web3.career/web3-jobs-india
+      - https://web3.career/remote-jobs
+    pages: 2
+    page_param: page
+    delay_seconds: 1.5
+    item: tr.table_row
+    fields:
+      title: h2
+      company: h3
+      location: span.job-location-mobile
+      posted: time@datetime
+      salary: p.text-salary
+      link: "a@href"
+
+  - name: crypto.jobs
+    type: html
+    enabled: true
+    every_minutes: 720
+    web3_native: true
+    base_url: https://crypto.jobs
+    urls:
+      - https://crypto.jobs/jobs          # 50 per page, sorted oddly: page 1 has ~2 posts from the
+    pages: 1                              # last 14 days, the rest are 2024 and 2025 (0 kept in every run to 2026-09-25)
+    page_param: page
+    delay_seconds: 1.5
+    item: tr.job-entry
+    fields:
+      title: p.job-title
+      company: "span[itemprop=hiringOrganization] span[itemprop=name]"
+      location: "meta[itemprop=addressLocality]@content"
+      posted: "meta[itemprop=datePosted]@content"
+      description: "meta[itemprop=description]@content"
+      link: "a.job-url@href"
+
+  # hashtagweb3.com: its /jobs page shows the same 12 featured cards on every page (no working
+  # pagination). Its full feed arrives through the web3hiring Telegram channel below instead.
+
+  - name: CryptocurrencyJobs
+    type: rss
+    enabled: true
+    every_minutes: 20
+    web3_native: true
+    url: https://cryptocurrencyjobs.co/index.xml
+    company_from: title_at   # titles look like "Support Engineer at Company"
+
+  # ---------------- Telegram channels (public, no account needed) ----------------
+
+  - name: Telegram
+    type: telegram
+    enabled: true
+    every_minutes: 30
+    web3_native: true
+    channels:
+      - { name: laborx,          format: laborx,         kind: freelance, pages: 4 }   # client projects with budgets
+      - { name: DeJob_Global,    format: dejob,          pages: 3 }
+      - { name: web3hiring,      format: digest,         pages: 3 }
+      - { name: cryptojobslist,  format: cryptojobslist, pages: 3 }
+      - { name: blockchain_job,  format: generic,        pages: 2 }   # mostly Russian-language posts
+      # remoteweb3jobs: posts a message type the web preview can't read — check it in the Telegram app
+
+  # ---------------- Freelance / bounties ----------------
+
+  - name: Superteam Earn
+    type: superteam
+    enabled: true
+    every_minutes: 60
+    eligible_regions: [Global, India]   # many bounties are one-country-only; the rest are skipped
+
+  # ---------------- General remote boards (filtered to crypto) ----------------
+
+  - name: Remote boards
+    type: remote_boards
+    enabled: true
+    every_minutes: 60
+    boards: [remotive, remoteok, weworkremotely, workingnomads]
+
+  # ---------------- Crypto company career pages (official APIs) ----------------
+
+  - name: Company careers
+    type: ats
+    enabled: true
+    every_minutes: 30        # official public APIs, safe to check often
+    web3_native: true
+    companies:
+      # name: [ats, board-slug]
+      # Investigations / security
+      TRM Labs:       [ashby, trm-labs]
+      Elliptic:        [ashby, elliptic]
+      Merkle Science:  [lever, merklescience]
+      CertiK:          [lever, certik]
+      Cantina:         [ashby, cantina]
+      OpenZeppelin:    [greenhouse, openzeppelin]
+      Immunefi:        [greenhouse, immunefi]
+      Fireblocks:      [greenhouse, fireblocks]
+      # Exchanges
+      Coinbase:        [greenhouse, coinbase]
+      Binance:         [lever, binance]
+      OKX:             [greenhouse, okx]
+      Bybit:           [greenhouse, bybit]
+      Kraken:          [ashby, kraken.com]
+      Crypto.com:      [lever, crypto]
+      Gemini:          [greenhouse, gemini]
+      Bitpanda:        [greenhouse, bitpanda]
+      Bitso:           [greenhouse, bitso]
+      CoinMarketCap:   [lever, coinmarketcap]
+      MoonPay:         [lever, moonpay]
+      # Infra / nodes / wallets
+      Alchemy:         [ashby, alchemy]
+      QuickNode:       [ashby, quicknode]
+      Blockdaemon:     [ashby, blockdaemon]
+      Helius:          [ashby, helius]
+      Ledger:          [ashby, ledger]
+      Phantom:         [ashby, phantom]
+      Safe:            [lever, safe]
+      BitGo:           [greenhouse, bitgo]
+      Anchorage:       [lever, anchorage]
+      Blockstream:     [ashby, blockstream]
+      Casa:            [ashby, casa]
+      Tenderly:        [ashby, tenderly]
+      Dune:            [ashby, dune]
+      # Protocols / L1 / L2
+      Consensys:       [greenhouse, consensys]
+      Ripple:          [greenhouse, ripple]
+      Circle:          [ashby, circle]
+      Paxos:           [ashby, paxos]
+      Polygon Labs:    [ashby, polygon-labs]
+      Offchain Labs:   [lever, offchainlabs]
+      Matter Labs:     [ashby, matter-labs]
+      Ava Labs:        [ashby, ava-labs]
+      Aptos Labs:      [greenhouse, aptoslabs]
+      Mysten Labs:     [ashby, mystenlabs]
+      Solana Labs:     [ashby, solanalabs]
+      LayerZero:       [greenhouse, layerzerolabs]
+      Wormhole Labs:   [ashby, wormholelabs]
+      Uniswap Labs:    [ashby, uniswap]
+      Parity:          [ashby, parity]
+      Ondo Finance:    [greenhouse, ondofinance]
+      Ethena:          [lever, ethena]
+      Animoca Brands:  [lever, animocabrands]
+      Immutable:       [lever, immutable]
+      Polymarket:      [ashby, polymarket]
+      Jump Crypto:     [greenhouse, jumpcrypto]
+      Lightspark:      [ashby, lightspark]
+      # ---- added 2026-09-25 after checking ~460 crypto companies for public boards ----
+      # India (several show 0 jobs today. They are checked so a new opening is caught the same hour)
+      Delta Exchange:  [workable, deltaexchange]
+      CoinSwitch:      [workable, coinswitch]
+      Mudrex:          [workable, mudrex]
+      ZebPay:          [workable, zebpay]
+      WazirX:          [workable, wazirx]
+      Liminal:         [workable, liminal]
+      Giottus:         [workable, giottus]
+      Push Protocol:   [workable, push-protocol]
+      Biconomy:        [workable, biconomy]
+      # Exchanges, brokers, custody, stablecoins
+      Tether:          [recruitee, tether]      # 175 jobs, many remote (incl. Blockchain Investigator)
+      Bitfinex:        [recruitee, bitfinex]
+      Gate:            [lever, gate]
+      Luno:            [greenhouse, luno]
+      BVNK:            [greenhouse, bvnk]
+      Zodia Custody:   [workable, zodia-custody]
+      SwissBorg:       [lever, swissborg]
+      FalconX:         [greenhouse, falconx]
+      Keyrock:         [ashby, keyrock]
+      Flowdesk:        [smartrecruiters, flowdesk]
+      B2C2:            [greenhouse, b2c2]
+      Amber Group:     [lever, ambergroup]
+      Auros:           [greenhouse, aurosglobal]
+      Presto Labs:     [lever, prestolabs]
+      Caladan:         [greenhouse, caladan]
+      Bitvavo:         [ashby, bitvavo]
+      Coinhako:        [ashby, coinhako]
+      CoinJar:         [smartrecruiters, coinjar]
+      Shakepay:        [greenhouse, shakepay]
+      WOO X:           [greenhouse, woo]
+      LocalCoin:       [greenhouse, localcoin]
+      Coinme:          [greenhouse, coinme]
+      Strike:          [greenhouse, strike]
+      River:           [ashby, river]
+      Unchained:       [greenhouse, unchainedlabs]
+      Rain:            [ashby, rain]
+      Triple-A:        [recruitee, triplea]
+      21Shares:        [greenhouse, 21shares]
+      Grayscale:       [greenhouse, grayscale]
+      Securitize:      [greenhouse, securitize]
+      Superstate:      [lever, superstate]
+      Centrifuge:      [lever, centrifuge]
+      Hut 8:           [greenhouse, hut8]
+      # Data, security, infra, wallets
+      Allium:          [ashby, allium]
+      Artemis:         [ashby, artemis]
+      Nansen:          [ashby, nansen]
+      CoinGecko:       [lever, coingecko]
+      TaxBit:          [greenhouse, taxbit]
+      Cryptio:         [ashby, cryptio]
+      Turnkey:         [ashby, turnkey]
+      Nethermind:      [ashby, nethermind]
+      Gauntlet:        [lever, gauntlet]
+      Zerion:          [lever, zerion]
+      Solflare:        [smartrecruiters, solflare]
+      Squads:          [ashby, squads]
+      Switchboard:     [ashby, switchboard]
+      Jito Labs:       [ashby, jito-labs]
+      SatoshiLabs:     [ashby, satoshilabs]
+      Chaincode Labs:  [greenhouse, chaincodelabs]
+      Eigen Labs:      [ashby, eigen-labs]
+      Succinct:        [ashby, succinct]
+      # Protocols, ecosystems, apps
+      OP Labs:         [ashby, oplabs]
+      Stellar:         [ashby, stellar]
+      Injective:       [ashby, injective]
+      Sei Labs:        [ashby, sei-labs]
+      Trilitech:       [ashby, trilitech]
+      Magic Eden:      [ashby, magiceden]
+      OpenSea:         [ashby, opensea]
+      Sky Mavis:       [ashby, skymavis]
+      1inch:           [lever, 1inch]
+      0x:              [ashby, 0x]
+      Paradigm:        [ashby, paradigm]
+      a16z crypto:     [ashby, a16z-crypto]
+      Hashed:          [smartrecruiters, hashed]
+      Ethereum Foundation: [smartrecruiters, ethereumfoundation]
+
+  # Companies with crypto teams inside a bigger business. Their other jobs are not crypto, so
+  # no web3 bonus by default (scoring needs crypto words in the job itself).
+  - name: Company careers (mixed)
+    type: ats
+    enabled: true
+    web3_native: false
+    every_minutes: 60
+    companies:
+      Robinhood:       [greenhouse, robinhood]
+      Brave:           [greenhouse, brave]
+      Sardine:         [ashby, sardine]
+      Figure:          [greenhouse, figure]
+
+  # ---------------- Crypto VC portfolio boards (added 2026-09-25) ----------------
+  # One board per fund lists every company it backed. Getro and Consider APIs, see vc_boards.py.
+  - name: VC job boards
+    type: vc_boards
+    enabled: true
+    web3_native: false       # funds also back fintechs (Veem scored 80 with no crypto word, 2026-09-26)
+    web3_hint: true          # counts as crypto until the saved apply page text says otherwise
+    every_minutes: 180
+    pages: 3                 # 100 newest per page, stops early at max_age_days
+    getro:
+      Solana:          [jobs.solana.com, 858]
+      Dragonfly:       [jobs.dragonfly.xyz, 1118]
+      Polychain:       [jobs.polychain.capital, 203]
+      Multicoin:       [jobs.multicoin.capital, 390]
+      Blockchain Capital: [jobs.blockchaincapital.com, 815]
+      CoinFund:        [jobs.coinfund.io, 1032]
+      Electric Capital: [jobs.electriccapital.com, 1640]
+      Framework:       [jobs.framework.ventures, 1127]
+      Jump Crypto:     [jobs.jumpcrypto.com, 20916]
+      Arbitrum:        [jobs.arbitrum.io, 4184]
+      Avalanche:       [jobs.avax.network, 10223]
+      Spartan:         [jobs.spartangroup.io, 1179]
+      Placeholder:     [jobs.placeholder.vc, 922]
+    consider:
+      Pantera:         [jobs.panteracapital.com, pantera-capital]
+      Hashed:          [jobs.hashed.com, hashed]
+      Shima:           [jobs.shima.capital, shima-capital]
+
+  # ---------------- Aggregators and remote APIs (added 2026-09-25) ----------------
+  - name: JobStash
+    type: jobstash
+    enabled: true
+    every_minutes: 60
+    publication_date: past-2-weeks
+    pages: 3
+    watch: { publication_date: this-week, pages: 1 }   # 100 newest per word ("today" is a UTC day, it missed posts)
+    queries: [crypto, blockchain, web3, defi, stablecoin, digital assets, onchain, bitcoin, ethereum, solana]
+
+  - name: Remote APIs
+    type: remote_apis          # Himalayas and Jobicy state which countries a remote job accepts
+    enabled: true
+    every_minutes: 60
+    boards: [himalayas, jobicy]
+    himalayas_queries: [crypto, blockchain, web3, defi, stablecoin, bitcoin, ethereum, solana, digital assets]
+    jobicy_tags: [crypto, blockchain, web3, defi]
+
+  - name: Indeed
+    type: indeed               # via python-jobspy (Indeed's app API). The website itself blocks scripts
+    enabled: true
+    every_minutes: 180
+    hours_old: 72
+    results: 40
+    searches: [blockchain, cryptocurrency, crypto exchange, web3, crypto compliance, crypto support, bitcoin]
+    locations:
+      - { location: India, country: India }
+
+  - name: India boards
+    type: india_boards         # Instahyre, Internshala, Cutshort, Foundit (ex Monster India)
+    enabled: true
+    every_minutes: 240
+    sites: [instahyre, internshala, cutshort, foundit]
+    queries: [blockchain, crypto, web3, cryptocurrency]
+    delay_seconds: 2
+
+  - name: HN Who is hiring
+    type: hn_hiring            # monthly Hacker News thread, crypto posts only
+    enabled: true
+    every_minutes: 720
+
+  # ---------------- Freelance (added 2026-09-25) ----------------
+  - name: Freelancer
+    type: freelancer
+    enabled: true
+    every_minutes: 60
+    queries: [blockchain, crypto, web3, smart contract, defi, crypto research, telegram moderator, discord moderator]

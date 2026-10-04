@@ -1,0 +1,19 @@
+# ============================================================================
+#  EARN PLATFORMS tab (read by jobhunter/pipeline.py and excel.py)
+#
+#  The crypto version listed bounty and AI training platforms here. The list is empty in this kit.
+#  Add places to sign up once and get paid work from, or leave it empty.
+#
+#  Each entry looks like
+#    - platform: Example
+#      fit: 70                 # 0 to 100, used for Priority
+#      type: kind of work
+#      what: what you would do there
+#      why: why it fits the candidate
+#      pay: how much and how often it pays
+#      checked: 2026-01-01     # when the site was last checked by hand
+#      link: https://example.com
+#      note: anything to remember when signing up
+# ============================================================================
+
+platforms: []

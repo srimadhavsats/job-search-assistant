@@ -1,0 +1,119 @@
+# ============================================================================
+#  COVER LETTERS AND FORM ANSWERS  (read by jobhunter/cover.py)
+#
+#  EXAMPLE FILE. Every sentence below is a placeholder. Replace each one with true facts from
+#  Career_Facts.txt. A letter is built only from these pieces, picked by the words in the job text,
+#  so nothing is ever invented. Keep out colons, semicolons, em and en dashes and arrows (hyphens
+#  inside words are fine).
+#
+#  The family names (tm, research, general, india) match the templates in config/cvs.yaml, and
+#  jobhunter/cover.py refers to them by name. Triggers are still the crypto examples.
+# ============================================================================
+
+output_dir: output/cover_letters
+
+# Who the letters are from. Links are written without https://
+candidate:
+  name: Your Name
+  email: you@example.com
+  phone: "+91 00000 00000"
+  links: [linkedin.com/in/your-name]
+  home_city: Your City
+
+openings:
+  tm: >-
+    I'm applying for the {role} role at {company}. EXAMPLE opening sentence for this family of jobs, from true facts only.
+  research: >-
+    I'm applying for the {role} role at {company}. EXAMPLE opening sentence for this family of jobs, from true facts only.
+  general: >-
+    I'm applying for the {role} role at {company}. EXAMPLE opening sentence for this family of jobs, from true facts only.
+  india: >-
+    I'm applying for the {role} role at {company}. EXAMPLE opening sentence for this family of jobs, from true facts only.
+
+# The strongest piece for each kind of job always comes first, then the best matches to the job text.
+anchors: {tm: tracing, research: research, general: support, india: review}
+
+# Used for "tell us about yourself" boxes on application forms.
+about_me: >-
+  EXAMPLE three or four sentences about me, built only from Career_Facts.txt.
+
+# Evidence paragraphs. The ones whose trigger words appear most in the job text are used (at most 3).
+evidence:
+  - id: tracing
+    families: [tm, research]
+    triggers: [on-chain, onchain, blockchain analytics, tracing, trace, investigation*, forensic*, fund flow*, wallet*,
+               chainalysis, elliptic, trm, arkham, nansen, typolog*, exploit*, hack*, osint, intelligence]
+    lead: On the investigation side,
+    text: >-
+      EXAMPLE investigations fact. Replace with a true line from Career_Facts.txt.
+  - id: review
+    families: [tm, general, india]
+    triggers: [kyc, kyb, aml, cdd, edd, due diligence, review*, alert*, case*, policy, policies, compliance,
+               onboarding, screening, escalat*, decision*, quality, accuracy, fraud, risk]
+    lead: On case review,
+    text: >-
+      EXAMPLE case review fact. Replace with a true line from Career_Facts.txt.
+  - id: support
+    families: [general, india, tm]
+    triggers: [support, customer*, user*, ticket*, help desk, helpdesk, troubleshoot*, community, moderat*, discord,
+               telegram, wallet*, transaction*, escalat*, zendesk, freshdesk, intercom]
+    lead: On the support side,
+    text: >-
+      EXAMPLE support fact. Replace with a true line from Career_Facts.txt.
+  - id: training
+    families: [general, india, tm]
+    triggers: [train*, onboard*, mentor*, coach*, stakeholder*, communicat*, documentation, process*, sop*, team lead]
+    lead: On people and process,
+    text: >-
+      EXAMPLE people and process fact. Replace with a true line from Career_Facts.txt.
+  - id: research
+    families: [research, general]
+    triggers: [research*, analys*, market*, token*, tokenomics, defi, due diligence, thesis, report*, writing, write*,
+               content, macro, valuation, narrative*, dune, data]
+    lead: On research,
+    text: >-
+      EXAMPLE research fact. Replace with a true line from Career_Facts.txt.
+
+# Said only when the job text asks for experience or a tool the candidate has not used at work.
+gaps:
+  tm: >-
+    EXAMPLE honest gap paragraph. Say what I have not done, then the closest true experience.
+  qa: >-
+    EXAMPLE honest gap paragraph for testing tools.
+gap_triggers:
+  tm: [compliance experience, aml experience, kyc experience, years of experience in compliance, chainalysis, elliptic, trm]
+  qa: [selenium, cucumber, postman, jenkins, appium, cypress, playwright]
+
+logistics:
+  remote: I am based in India on IST and comfortable working fully remote, including early and late hours to overlap with your team.
+  india_city: I am based in Your City and willing to relocate to {city}. My notice period is SET ME.
+  india: I am based in Your City and willing to relocate anywhere in India. My notice period is SET ME.
+  abroad: I am based in India and open to relocating with visa sponsorship, or to working remotely.
+closing:
+  tm: Thank you for considering my application. I would welcome the chance to talk.
+  research: Thank you for considering my application. I would welcome the chance to talk.
+  general: Thank you for considering my application. I would welcome the chance to talk.
+  india: Thank you for considering my application. I would welcome the chance to talk.
+
+# Standard answers for application forms. Same numbers everywhere.
+answers:
+  Last title: SET ME (title, company, month and year to now)
+  Total experience: SET ME
+  Relevant experience: SET ME
+  Current CTC: SET ME (fixed plus variable)
+  Notice period: SET ME (and whether it can be bought out)
+  Location: SET ME
+# Expected pay by kind of employer and level of role. Change any value and letters and answers update.
+expected_pay:
+  indian_entry: SET ME for Indian companies, entry level roles
+  indian_analyst: SET ME for Indian companies, analyst level roles
+  global_entry: SET ME for global companies in India, entry level roles
+  global_analyst: SET ME for global companies in India, analyst level roles
+  remote_global: Open to the range set for this role, happy to discuss
+  gig: SET ME for freelance work
+# Titles with any of these words count as analyst level for pay
+analyst_words: [analyst, compliance, aml, kyc, kyb, risk, fraud, investigat*, forensic*, intelligence, surveillance,
+                sanctions, research*, qa, quality, sdet, test*, engineer, developer, specialist, consultant, trainer]
+# Companies treated as Indian employers for pay
+indian_companies: [coindcx, coinswitch, zebpay, wazirx, mudrex, giottus, pi42, bitbns, koinx, koinbx, unocoin,
+                   delta exchange, liminal]

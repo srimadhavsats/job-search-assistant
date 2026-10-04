@@ -1,0 +1,83 @@
+# ============================================================================
+#  WHICH CV FOR WHICH JOB  (read by jobhunter/cv.py)
+#
+#  EXAMPLE FILE. The templates, rules and messages below are placeholders left from the crypto
+#  version of this tool. Replace them with the candidate's own CV templates and role families.
+#
+#  Every row in the workbook gets a "CV" link. For good jobs (score at or above custom_min_score,
+#  status New, applicable) a job-specific copy is built automatically from the template's HTML.
+#  Only two things change in that copy: the headline (div.role) starts with the job's own title,
+#  and the location line (first span inside div.contact) matches the job. Nothing else changes, so
+#  nothing is ever invented.
+#
+#  Rules are checked top to bottom. The first rule that matches wins.
+# ============================================================================
+
+name: Your Name                   # used in PDF titles and file names
+home_city: Your City              # a job in this city gets location_lines.home
+
+output_dir: output/cvs            # built PDFs go here (the workbook links to them)
+custom_min_score: 55              # custom CV only for bands 1 and 2
+keep_days: 30                     # custom CVs for rows that left the workbook are deleted after this
+
+# Template ids are also cover letter families (config/cover_letters.yaml). jobhunter/cover.py
+# refers to tm, research, general and india by name, so rename them there too if you rename them here.
+templates:
+  tm:
+    html: CV_Template_Example.html
+    pdf: CV_Template_Example.pdf
+    label: Example CV A
+    tagline: [Example Strength One, Example Strength Two]
+    custom: true
+  research:
+    html: CV_Template_Example.html
+    pdf: CV_Template_Example.pdf
+    label: Example CV B
+    tagline: [Example Strength Three, Example Strength Four]
+    custom: true
+  general:
+    html: CV_Template_Example.html
+    pdf: CV_Template_Example.pdf
+    label: General CV
+    tagline: [Example Strength One, Example Strength Three]
+    custom: true
+  india:
+    html: CV_Template_Example.html
+    pdf: CV_Template_Example.pdf
+    label: One page CV
+    custom: false                  # job apps (Apna, Naukri) use the CV uploaded to your profile there
+
+rules:
+  - template: research
+    title_words: [market risk, trading risk, liquidity risk, quant*]
+  - template: tm
+    title_words: [kyc, kyb, aml, anti-money*, transaction monitoring, fraud*, investigat*, forensic*,
+                  compliance, sanctions, financial crime*, fincrime, fiu, sar, edd, cdd, due diligence,
+                  surveillance, intelligence, threat, osint, risk, law enforcement, mlro, screening,
+                  trust and safety, chargeback*, dispute*, grc]
+  - template: research
+    title_words: [research*, investment*, market analyst, tokenomics, token analyst, trading analyst,
+                  macro, strategist, analyst research, crypto analyst, market intelligence]
+  - template: india
+    sources: [Apna, Naukri, "India boards: internshala"]
+  - template: india
+    companies: [coindcx, coinswitch, zebpay, wazirx, mudrex, giottus, pi42, bitbns, koinx, koinbx, unocoin, delta exchange]
+    title_words: [support, operations, associate, executive, specialist, kyc, customer]
+  - template: general
+
+# Location line on custom CVs. {city} is the job's Indian city. No colons, semicolons or dashes.
+location_lines:
+  remote: "Your City, India (IST, available for remote work across time zones)"
+  home: "Your City, Your State, India"
+  india_city: "Your City, India (open to relocate to {city})"
+  india: "Your City, India (open to relocate anywhere in India)"
+  gulf: "Your City, India (open to relocate with employer visa sponsorship)"
+  abroad: "Your City, India (open to relocate with visa sponsorship, or remote)"
+
+# Referral request, filled in per job for the Apply Queue tab. No colons, semicolons or dashes.
+# NAME stays for you to fill. The link is written without https://
+referral_messages:
+  tm: "Hi NAME, I'm applying for {role} at {company} ({link}). EXAMPLE one line about why I fit, from true facts only. Would you be open to referring me, or telling me who reads applications for this team? My CV is attached. Thank you either way."
+  research: "Hi NAME, I'm applying for {role} at {company} ({link}). EXAMPLE one line about why I fit, from true facts only. Would you be open to referring me, or telling me who reads applications for this team? My CV is attached. Thank you either way."
+  general: "Hi NAME, I'm applying for {role} at {company} ({link}). EXAMPLE one line about why I fit, from true facts only. Would you be open to referring me, or telling me who reads applications for this team? My CV is attached. Thank you either way."
+  india: "Hi NAME, I'm applying for {role} at {company} ({link}). EXAMPLE one line about why I fit, from true facts only. Would you be open to referring me, or telling me who reads applications for this team? My CV is attached. Thank you either way."

@@ -1,0 +1,430 @@
+# ============================================================================
+#  YOUR SEARCH PROFILE  —  edit freely, then run again. No code changes needed.
+#  Matching is case-insensitive and whole-word (see the scoring section).
+# ============================================================================
+
+# Jobs older than this are skipped (where the site tells us the date).
+max_age_days: 14
+
+# Jobs scoring below this are not written to Excel at all.
+min_score: 35
+
+# Titles/types that mean freelance rather than a salaried job (routed to the Freelance tab).
+# NOTE: no bare "contract" — it matches "smart contract". Fixed-term salaried roles stay in All Jobs.
+freelance_words: [freelance*, freelancer*, contractor*, bounty, bounties, gig, part-time,
+                  part time, parttime, hourly, per-project, per project, short-term, stipend]
+
+# "Priority" column in Excel. Work top-down: all of band 1 first, then 2, then 3.
+priority_bands:
+  - { min: 70, label: "1 - Apply now" }
+  - { min: 55, label: "2 - Good fit" }
+  - { min: 0,  label: "3 - Maybe" }
+
+# ---------------------------------------------------------------------------
+# FREELANCE / BOUNTY SCORING (Freelance tab). Goal: money soon, small jobs welcome.
+# Uses the same web3 and scam rules as jobs, but judges task type, pay and deadline.
+# ---------------------------------------------------------------------------
+freelance_scoring:
+  min_score: 30
+  task_tiers:
+    - points: 40
+      label: A
+      phrases: [research*, analysis, analyst, analyse*, analyze*, report*, thread, article*, blog*,
+                write*, writing, content, copywrit*, newsletter, documentation, docs, tutorial*,
+                explainer*, explain*, guide, review*, feedback, audit*, test*, qa, bug*, debug*, community,
+                moderat*, support, discord, telegram, translat*, hindi, data, dashboard*, dune,
+                on-chain, onchain, transaction*, forensic*, investigat*, due diligence, kyc, aml]
+    - points: 28
+      label: B
+      phrases: [video*, tweet*, twitter, social*, campaign*, marketing, meme*, clip*, ideathon,
+                pitch*, deck, presentation, ambassador*, quest*, hackathon*, product feedback]
+    - points: 15
+      label: C
+      phrases: [design*, ui, ux, logo, app, build*, develop*, code, coding, agent, bot, smart contract,
+                dapp*, integration, script*, automation]
+  no_task_match_penalty: -10
+  off_task_words: [video editing, editing, animation, 3d, illustrat*, figma, flutter, android, ios,
+                   sales, seo, recruit*, voice, dubbing, photograph*, leads, lead generation, cold email,
+                   # added 2026-09-25. Freelancer.com build jobs need a proven developer portfolio, and
+                   # marketing, BD and assistant gigs are not the owner's lanes
+                   develop*, mvp, webapp, web app, website, platform, arbitrage, trading bot, sniper bot,
+                   business development, marketing lead, marketing strategist, marketing manager,
+                   acquisition, virtual assistant, data entry, assistant needed, full stack, full-stack]
+  desc_only_task_penalty: 15       # task word found only in the gig text, not in its title
+  off_task_penalty: -18
+
+  # Reward size (USD). Small is fine — liquidity first.
+  pay_bands:
+    - { min: 1000, points: 12 }
+    - { min: 250,  points: 10 }
+    - { min: 50,   points: 7 }
+    - { min: 1,    points: 4 }
+  no_pay_listed_penalty: -5
+
+  # Deadline: enough time to do it well, but soon enough to get paid soon.
+  deadline_sweet_spot: [2, 14]     # days away → bonus
+  deadline_points: 10
+  deadline_tight_penalty: -8       # closes within a day
+  fresh_days: 2                    # just posted → you are early in the queue
+  fresh_points: 8
+
+  # Crowding (Superteam shows submission counts).
+  crowded_submissions: 40
+  crowded_penalty: -6
+
+  # Things that cost money or risk instead of paying you.
+  needs_capital_terms: [trade on, trading volume, deposit, buy and hold, staking required,
+                        swap, mint, purchase, referral, sign up and trade, presale]
+  needs_capital_penalty: -12
+
+  # Jobs that are really "rent me your identity/country". Doing these is fraud in most countries
+  # and the money is usually stolen from someone. Never worth it — killed, not just flagged.
+  illegal_gig_terms: [account verification, verify my account, verify account, developer account,
+                      your passport, your id card, national id, selfie with, bank account, debit card,
+                      credit card, sim card, kyc for, pass kyc, in your name, resident of, citizen of,
+                      need us man, need uk, need usa, us person, cadastro, deposito, depósito, saque,
+                      withdrawal test, receive payment for me, use your name, rent your,
+                      anyone in the uk, anyone in the us, uk welcome, us welcome, uk citizen,
+                      us citizen, must be located in, residing in, need someone from,
+                      # added 2026-09-25. Fake-coin tools, and setting up accounts for someone else
+                      flash bitcoin, flash btc, flash usdt, flash crypto, fake usdt, account setup,
+                      set up an account, setup account, create account for, verified account]
+  illegal_gig_penalty: -60
+
+  # "This listing is only open for people in Nigeria", "UK residents only", …
+  # If such a phrase appears and India/Global isn't in it, you can't enter — so it's dropped.
+  region_lock_patterns: ['only open (?:for|to)[^.]{0,60}', 'only (?:for|to) (?:residents|people|citizens)[^.]{0,50}',
+                         '(?:residents|citizens|applicants) of [^.]{0,40} only', 'must (?:be|reside) (?:a )?(?:resident|based) in [^.]{0,40}',
+                         'restricted to [^.]{0,40}',
+                         'must be (?:in|from|based in|located in|living in) (?:the )?[a-z .]{2,30}',
+                         '(?:only|exclusively) (?:for|from) (?:the )?(?:usa|us|uk|eu|europe|canada|australia)[^.]{0,20}',
+                         '\b(?:usa|us|uk|eu|europe|canada|australia|italy|germany|france|spain|brazil|nigeria|philippines|indonesia|vietnam|turkey|poland|japan|korea)\s+(?:residents?\s+)?only\b']
+  region_lock_ok_words: [india, global, worldwide, anywhere, international, any country, apac, asia]
+  region_lock_penalty: -45
+
+  # Rupee amounts are not dollars.
+  inr_markers: [lacs, lakh, lpa, inr, "₹", " pa", per annum]
+  inr_to_usd: 90
+
+# ---------------------------------------------------------------------------
+# NAUKRI searches. Naukri matches loosely (any word), so:
+#  - single core terms get several pages (these return the cleanest results)
+#  - role combinations get 1 page each
+# Scoring throws away the non-crypto noise. Same list as KEYWORDS.md.
+#   - blockchain            → 1 page (default)
+#   - { q: blockchain, pages: 6 }
+# ---------------------------------------------------------------------------
+naukri_searches:
+  - { q: blockchain, pages: 6 }
+  - { q: web3, pages: 3 }
+  - { q: cryptocurrency, pages: 3 }
+  - { q: crypto exchange, pages: 2 }
+  - { q: on-chain, pages: 1 }
+  - { q: solidity, pages: 2 }
+  - { q: smart contract, pages: 2 }
+  - { q: defi, pages: 1 }
+  - { q: crypto compliance, pages: 1 }
+  - { q: crypto aml, pages: 1 }
+  - { q: blockchain support, pages: 1 }
+  - { q: node operator, pages: 1 }
+  # your role combinations (Analyst / Consultant / SME / Trainer / Analytics / Engineer / Professional)
+  - blockchain analyst
+  - blockchain consultant
+  - blockchain sme
+  - blockchain trainer
+  - blockchain analytics
+  - blockchain engineer
+  - blockchain professional
+  - web3 analyst
+  - web3 consultant
+  - web3 sme
+  - web3 trainer
+  - web3 analytics
+  - web3 engineer
+  - web3 professional
+  - crypto analyst
+  - crypto consultant
+  - crypto sme
+  - crypto trainer
+  - crypto analytics
+  - crypto engineer
+  - crypto professional
+  - cryptocurrency analyst
+  - cryptocurrency consultant
+  - cryptocurrency sme
+  - cryptocurrency trainer
+  - cryptocurrency analytics
+  - cryptocurrency engineer
+  - cryptocurrency professional
+  # entry-level developer path
+  - junior blockchain developer
+  - blockchain developer fresher
+  - solidity developer
+
+# NaukriGulf (UAE, Saudi, Qatar, Bahrain, Oman, Kuwait). Small market (~100 crypto jobs), so a few
+# broad searches cover it.
+naukrigulf_searches: [blockchain, crypto, cryptocurrency, web3, digital assets, virtual assets,
+                      crypto compliance, crypto exchange, aml crypto, defi]
+
+# LinkedIn understands OR / AND / "exact phrase", so a few grouped searches cover everything.
+linkedin_searches:
+  - '(blockchain OR crypto OR web3 OR "digital assets") AND (analyst OR investigator OR investigations OR forensics OR intelligence)'
+  - '(blockchain OR crypto OR web3 OR "digital assets" OR "virtual assets") AND (compliance OR AML OR KYC OR fraud OR risk)'
+  - '(blockchain OR crypto OR web3) AND ("technical support" OR "customer support" OR "support engineer" OR "customer success" OR "support specialist")'
+  - '(blockchain OR crypto OR web3) AND (devops OR SRE OR "site reliability" OR node OR validator OR infrastructure)'
+  - '(blockchain OR crypto OR web3) AND (QA OR "quality assurance" OR tester OR "test engineer")'
+  - '(blockchain OR crypto OR web3) AND (community OR moderator OR "developer relations" OR devrel OR "technical writer" OR content)'
+  - '(blockchain OR crypto OR web3) AND (research OR "market analyst" OR operations)'
+  - '(blockchain OR crypto OR web3 OR solidity) AND (junior OR associate OR entry OR graduate OR trainee OR intern)'
+  - '"on-chain" OR onchain OR "blockchain analyst" OR "crypto analyst" OR chainalysis OR "TRM Labs" OR elliptic'
+  - '(crypto OR web3 OR blockchain OR "digital assets" OR tokenomics OR defi) AND (researcher OR "research analyst" OR "investment research" OR "investment analyst")'
+  - '(blockchain OR crypto OR web3 OR cryptocurrency) AND (consultant OR SME OR "subject matter expert" OR trainer OR analytics OR professional)'
+  - '(blockchain OR web3 OR solidity OR "smart contract") AND (junior OR entry OR "0-2 years" OR "1 year" OR graduate OR fresher OR intern) AND (developer OR engineer)'
+  - '(blockchain OR crypto OR web3) AND ("solutions engineer" OR "integration engineer" OR "implementation engineer" OR "developer support" OR "technical account manager" OR "protocol specialist")'
+
+# Where LinkedIn searches. "remote: true" = remote-only filter.
+linkedin_locations:
+  - { location: "India" }
+  - { location: "Worldwide", remote: true }
+
+# ---------------------------------------------------------------------------
+# RELEVANCE SCORING  (0–100). Points are added, then clamped to 0..100.
+#
+# Matching rules: case-insensitive, whole words. End a phrase with * to also
+# match longer words:  "investigat*" matches investigator, investigations.
+# ---------------------------------------------------------------------------
+scoring:
+  # Title phrases → points. The highest matching tier wins.
+  title_tiers:
+    - points: 40
+      label: A
+      phrases: [on-chain*, onchain*, blockchain analyst, crypto analyst, investigat*, forensic*,
+                aml, anti-money*, financial crime*, fincrime, fraud*, transaction monitoring,
+                compliance analyst, kyc analyst, kyc specialist, threat intel*, intelligence analyst,
+                risk analyst, technical support, tech support, support engineer, customer support,
+                support specialist, support analyst, support associate, product support,
+                application support, help desk, helpdesk, node operator*, node engineer,
+                validator*, blockchain operations, crypto operations, wallet operations, incident response,
+                blockchain consultant, crypto consultant, web3 consultant, blockchain sme, crypto sme,
+                web3 sme, subject matter expert, blockchain trainer, crypto trainer, web3 trainer,
+                blockchain analytics, crypto analytics, web3 analyst, cryptocurrency analyst,
+                blockchain professional, crypto professional, developer support, protocol analyst,
+                security researcher, bug bounty, blockchain tester,
+                research analyst, crypto research*, web3 research*, blockchain research*, investment research*,
+                investment analyst, token research*, tokenomics, defi research*, digital asset research*]
+    - points: 30
+      label: B
+      phrases: [qa, quality*, test engineer, tester, sdet, community*, moderator*, ambassador*,
+                developer relations, devrel, developer advocate, technical writer, research,
+                researcher, analyst, analytics, operations, market analyst, market research*,
+                trading analyst, trading operations, data analyst, solutions engineer,
+                integration engineer, implementation*, onboarding, customer success, customer service,
+                technical account manager, research engineer, consultant, trainer, sme, prototyp*,
+                devops, site reliability, sre, infrastructure operations,
+                compliance*, kyc, risk, specialist, protocol specialist, content writer]
+    - points: 18
+      label: C
+      phrases: [solidity, smart contract*, blockchain developer, blockchain engineer, web3 developer,
+                python, backend, back-end, data engineer, engineer, developer, programmer]
+
+  # Not points-worthy on their own: titles with none of the tier phrases get this.
+  no_title_match_penalty: -10
+
+  # Roles far from your profile. Still shown if they score high enough, never deleted.
+  off_target_title_words: [account executive, sales, business development, bd, marketing, growth,
+                           designer, design, counsel, legal, lawyer, recruiter, talent, hr, people partner,
+                           accountant, accounting, finance, financial analyst, tax, audit*, payroll,
+                           product manager, program manager, project manager, chief of staff,
+                           java, golang, go developer, go engineer, rust, c++, android, ios, mobile, frontend, front-end,
+                           full stack, fullstack, full-stack, machine learning, ml, ai engineer,
+                           data scientist, quant*, quantitative, scala, kotlin, .net, embedded, hardware,
+                           professor, lecturer, faculty, teacher, curriculum, walk in, walk-in, telecaller,
+                           # added 2026-09-25 (Cutshort and Indeed bring many plain developer posts)
+                           haskell, react native, flutter, php, laravel, wordpress, shopify, magento,
+                           salesforce, sap, servicenow, unity developer, unreal, game developer]
+  off_target_penalty: -25
+
+  senior_title_words: [senior, sr, staff, principal, lead*, head, director, vp, vice president, chief,
+                       architect, manager ii, iii, iv]
+  senior_title_penalty: -15
+
+  junior_title_words: [junior, jr, associate, entry, entry-level, graduate, trainee, intern, internship,
+                       fresher, apprentice, i, l1]
+  junior_title_points: 10
+
+  # If the job text has none of these (and the site isn't a web3 board) it's probably not a crypto job.
+  web3_terms: [blockchain*, crypto, cryptos, cryptocurrenc*, cryptoasset*, crypto-asset*, web3, web 3, defi, on-chain, onchain, bitcoin, ethereum, evm, solana,
+               nft*, stablecoin*, digital asset*, smart contract*, validator*, decentralized exchange*, decentralised exchange*,
+               perp dex*, dex aggregator*, dao, rollup*, l2 chain*,
+               staking, virtual asset*, vasp*, tokenization, tokenomics, self-custody, dapp*,
+               # crypto companies by name, so a bare "Customer Support Specialist, Coinbase India" card
+               # (Apna, no description) still counts as crypto. Only names that aren't ordinary words.
+               coinbase, binance, coindcx, coinswitch, bybit, okx, kucoin, wazirx, zebpay, mudrex, giottus,
+               bitbns, koinbx, pi42, delta exchange, chainalysis, elliptic, trm labs, merkle science,
+               fireblocks, bitgo, moonpay, bitfinex, crypto.com]
+  web3_bonus: 15
+  # A job counts as clearly web3 when a web3 word is in the title/company, the source is a web3 board,
+  # or the description mentions web3 words at least this many times. One passing mention
+  # ("exposure to AI, cloud, blockchain…") only gets the weak bonus and a score cap.
+  web3_strong_mentions: 3
+  weak_web3_bonus: 5
+  weak_web3_max_score: 50
+  not_web3_penalty: -35          # applied when a description was available (Naukri returns lots of generic BPO jobs)
+  not_web3_penalty_no_desc: -15  # LinkedIn titles only — can't be sure
+  not_web3_max_score: 30         # jobs with no web3 word anywhere never score above this (below min_score)
+
+  # Your skills from the CV: +2 each, max +10.
+  skills: [prototyp*, proof of concept, poc, hackathon*, dune analytics, the graph,
+           json-rpc, rpc, etherscan, blockscout, dune, nansen, chainalysis, trm, arkham, python, sql,
+           linux, docker, websocket*, rest api*, qa, test case*, root cause*, troubleshoot*, ticketing,
+           jira, zendesk, freshdesk, aws, solidity, foundry, node operation*, block explorer*,
+           transaction tracing, fund flow*, aml, kyc, grafana, prometheus]
+  skill_points_each: 2
+  skill_points_max: 10
+
+  # Location fit (checked against the location + work mode).
+  india_or_global_locations: [india, lucknow, noida, delhi, new delhi, gurugram, gurgaon, bengaluru,
+                              bangalore, hyderabad, pune, mumbai, chennai, kolkata, ahmedabad, jaipur,
+                              indore, chandigarh, uttar pradesh, apac, asia, asia pacific, anywhere,
+                              worldwide, global, international]
+  location_points: 10
+  # "Remote - USA" etc. are usually not open to someone living in India.
+  region_locked_terms: [us, usa, united states, canada, north america, americas, amer, latam, brazil,
+                        mexico, colombia, argentina, europe, eu, emea, uk, united kingdom, germany,
+                        france, spain, portugal, poland, australia, japan, korea]
+  remote_open_points: 10         # remote with no region restriction
+  # "Remote - USA", "Remote (Poland)" etc. almost never hire from India, so they are pushed
+  # down out of the apply-now bands instead of competing with jobs you can actually get.
+  remote_locked_points: -20
+  region_locked_max_score: 45    # hard ceiling for region-locked remote AND abroad on-site without visa
+  # …unless the text says they hire anywhere:
+  # Explicit "we hire anywhere" phrases only. A bare mention of India is not enough: a Stripe
+  # Mexico City post listed "Bengaluru, India" among its office locations and was wrongly rescued.
+  # Phrases about WHO CAN APPLY only. "We are a global remote company" / "globally distributed team"
+  # describe the company: QuickNode's US+Portugal-only support job scored 87 on "global remote"
+  # (2026-09-25), so those were removed.
+  global_remote_words: [work from anywhere, anywhere in the world, remote worldwide, hire globally,
+                        hiring globally, work anywhere, hire anywhere, hiring anywhere, from any country,
+                        any time zone, any timezone, anywhere in asia, open to candidates in india,
+                        candidates based in india, hiring in india]
+  # Only genuine "we sponsor foreigners" wording. Bare "relocation" is usually a local perk
+  # (a Colombian bank offering relocation is not sponsoring an Indian applicant).
+  # Checked in the job text only (not the title). Bare "sponsorship" was dropped on 2026-09-25. Rain's
+  # "Compliance Associate, Bank Sponsorship" (New York) scored 77 as if it offered a visa.
+  visa_terms: [visa sponsor*, visa support, work visa, work permit, sponsor your visa, sponsor visas,
+               immigration support, international relocation, relocation package, relocation assistance]
+  # "Sponsorship is not available" contains the word sponsorship. Deloitte's US-only forensics
+  # manager post scored 79 because of it (2026-09-23).
+  visa_negative_patterns: ['(?:no|not|unable to|cannot|can ?not|will not|won.t|does not|do not|doesn.t|don.t)\b[^.]{0,40}\bsponsor',
+                           'without (?:visa )?sponsorship', 'sponsorship[^.]{0,20}\bnot (?:available|offered|provided)']
+  abroad_visa_points: 5          # on-site abroad AND visa/relocation mentioned
+
+  # Jobs out of reach for reasons the location field doesn't show (scoring.locale_lock):
+  # a required language, or a place named in the title. Capped like region-locked jobs.
+  required_languages: [japanese, korean, mandarin, chinese, cantonese, thai, vietnamese, indonesian, bahasa,
+                       malay, tagalog, filipino, arabic, turkish, russian, ukrainian, spanish, portuguese,
+                       french, german, italian, polish, dutch, persian, farsi, hebrew, greek, czech,
+                       romanian, hungarian, swedish]
+  language_optional_words: '\b(?:plus|preferred|nice to have|advantage|bonus|desirable|beneficial|a benefit)\b'
+  # "US" is left out on purpose: "Support Engineer (US shift)" is normal for India-based roles.
+  title_region_words: [new york, nyc, san francisco, west coast, east coast, usa, united states, us only,
+                       us-based, canada, latam, latin america, brazil, mexico, europe, uk, london, germany,
+                       berlin, france, paris, spain, italy, portugal, poland, turkey, korea, japan, vietnam,
+                       thailand, indonesia, philippines, nigeria, africa, australia,
+                       # "Forward Deployed Engineer Madrid" (Taxbit, location "Remote") scored 53 (2026-09-25)
+                       madrid, barcelona, lisbon, amsterdam, netherlands, dublin, ireland, zurich, switzerland,
+                       toronto, chicago, austin, miami, denver, seattle, boston, los angeles, tokyo, seoul,
+                       argentina, colombia, chile]
+  # Bare US/UK in a title only at the start, in brackets or at the end ("US MLRO Financial Crimes
+  # Officer" scored 75, 2026-09-25). "(US shift)" and "US time zone" are left alone.
+  title_region_patterns: ['^(us|uk|usa|eu)\s', '\((us|uk|usa|eu)\)', '[-,|]\s*(us|uk|usa)\s*$', '\b(us|uk)[- ]based\b']
+  # "Investigative Journalist (Volunteer)" scored 70 in apply-now (2026-09-25). The goal is paid work.
+  unpaid_title_words: [volunteer, unpaid, pro bono]
+  # Programmes limited to current students / fresh graduates (you graduated in 2018).
+  student_only_patterns: ['accelerator program', 'accelerator programme', 'new grad', 'campus hir',
+                          'summer 20\d\d', 'current (?:university |college )?students (?:and|or) recent graduates',
+                          'currently enrolled', 'pursuing (?:a |an |your )?(?:bachelor|master|degree)']
+  # A location requirement written only in the description ("Based in the US" as the last bullet).
+  desc_region_pattern: '\b(?:based|located|residing|living) in (?:the )?(?:us|usa|u\.s\.|united states|uk|united kingdom|eu|europe|canada|north america|australia)\b'
+  locale_lock_points: -25
+  # Added 2026-09-26 after reading every 70+ job page by hand.
+  # US employment benefits in the text mean a US hire (DV Trading "Trade Support Engineer", listed Remote).
+  us_benefits_pattern: '\b(?:401\s?\(?k\)?|hsa|fsa|medicare|us health insurance)\b'
+  # A paid certificate that is required, not just preferred (PLAYBOOK section 5 says skip these).
+  required_cert_points: -15
+  # 5+ years in one specialism (AML, sanctions, SAR filing, SOC, market risk…). The owner's 5 years are
+  # QA and policy review, which counts as general experience but not as years in these fields.
+  specialist_min_years: 4          # PLAYBOOK section 5, 4 years is the most to stretch for
+  specialist_fields: [aml, anti-money*, sanctions, compliance, kyc, edd, sar*, investigation*, fraud, risk,
+                      soc, security operations, incident response, information security, dlp, trading,
+                      derivatives, treasury, capital markets, investment banking, audit*, legal]
+  specialist_years_points: -15
+
+  # Manager titles in compliance, fraud, risk and operations want years of ownership in that
+  # exact field. 3 of the first 7 applications went to such roles, with no reply.
+  manager_title_penalty: -12
+  manager_exempt_words: [community, social, content, kol, brand, discord, telegram, ambassador, moderator]
+  # In the Gulf the employer sponsors the work visa by law for every foreign hire, so jobs
+  # there count as visa-sponsored even when the post doesn't say so.
+  visa_typical_locations: [united arab emirates, uae, dubai, abu dhabi, sharjah, ajman, ras al khaimah,
+                           saudi arabia, riyadh, jeddah, qatar, doha, bahrain, manama, oman, muscat,
+                           kuwait]
+
+  # Experience asked (parsed from "3-5 yrs", "5+ years" …).
+  exp_ok_max_min_years: 5        # "min years asked" ≤ this → bonus
+  exp_ok_points: 10
+  exp_too_high_min_years: 8      # "min years asked" ≥ this → penalty
+  exp_too_high_penalty: -15
+
+  # Technical build/run roles are judged on years asked, whatever tier the title landed in.
+  # Your 5+ years are QA/analysis, which counts for analyst/support/compliance roles but not as
+  # production DevOps or development years. Support/solutions/QA engineer titles are exempt.
+  tech_role_words: [devops, site reliability, sre, infrastructure engineer, infra, platform engineer,
+                    cloud engineer, backend, back-end, software engineer, developer, programmer,
+                    data engineer, security engineer, smart contract engineer, blockchain engineer,
+                    ml engineer, ai engineer, protocol engineer, systems engineer]
+  tech_role_exempt_words: [support, solutions, customer, qa, quality, test, sales, success, intern]
+
+  # Core stacks a job may REQUIRE that you have not run in production. Each one found in the
+  # description costs points and is listed in Flags as "Gap: …" — handy as a study list too.
+  missing_skills: [kafka, redis, kubernetes, k8s, terraform, ansible, helm, istio, argo*, golang,
+                   java, rust, c++, scala, spark, hadoop, elasticsearch, cassandra, clickhouse,
+                   flink, typescript, node.js, react native, swift, kotlin,
+                   rag, agentic, vector store*, vector database*, embedding*, qdrant, milvus, pinecone,
+                   weaviate, langchain, llamaindex, pytorch, tensorflow, fine-tun*, mlops,
+                   # device and malware forensics, a different profession from on-chain tracing. Quick Heal
+                   # "Junior Consultant" (a forensics trainer job, crypto 1 topic of 11) scored 86, 2026-09-26
+                   cellebrite, encase, x-ways, ftk imager, magnet axiom, jtag, chip-off, malware analysis,
+                   reverse engineering malware, mobile forensics, memory forensics, cctv footage]
+  missing_skill_points_each: -4
+  missing_skill_points_max: -16
+  # Needing 4+ core stacks you haven't used isn't a stretch, it's a different profession.
+  many_gaps: 4
+  many_gaps_max_score: 50
+
+  # Developer roles (title tier C: developer / engineer / solidity …) are judged on years asked.
+  # Your 5+ years are in QA/analysis, not development, so entry-level dev roles are the right door.
+  dev_entry_max_years: 2         # dev role asking ≤ this → bonus
+  dev_entry_points: 15
+  dev_too_senior_min_years: 4    # dev role asking ≥ this → penalty (on top of the normal experience rule)
+  dev_too_senior_penalty: -15
+
+  # Old postings. Company career pages keep "evergreen" jobs open for years.
+  stale_days: 90
+  stale_penalty: -10
+  very_stale_days: 365
+  very_stale_penalty: -20
+
+  fresh_days: 3
+  fresh_points: 5
+  web3_source_points: 5
+
+  # Shown as a ⚠ warning, never hidden.
+  scam_terms: [registration fee, training fee, security deposit, pay for training, pay to join,
+               guaranteed return*, guaranteed profit*, daily payout, earn daily, whatsapp only,
+               telegram only, dm on telegram, send your seed, seed phrase to, investment required,
+               work from mobile,
+               # "Flash Bitcoin Generator Webapp" scored 81 on Freelancer (2026-09-25). Flash coins are a
+               # known scam: fake balances that vanish, used to cheat buyers.
+               flash bitcoin, flash btc, flash usdt, flash crypto, flash coin*, fake usdt, fake transaction*,
+               wallet drainer, drainer, private key recovery, recover stolen, crypto recovery]
